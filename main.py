@@ -208,7 +208,8 @@ def main(
                 os.mkdir('checkpoint')
             torch.save(state, output_folder / f'ckpt_best.pth')
             best_acc = acc
-        if epoch+1 in [1, 3, 10, 30, 100, 300, 1000, 3000, 10000]:
+        # save 1, 3, 10, 300, ...
+        if np.log10(epoch+1) % 1 == 0 or np.log10((epoch+1)/3) % 1 == 0:# in [1, 3, 10, 30, 100, 300, 1000, 3000, 10000]:
             print('Saving.. epoch', epoch)
             state = {
                 'net': net.state_dict(),
