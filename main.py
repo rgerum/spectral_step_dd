@@ -47,6 +47,7 @@ def main(
         k: int = 12,
         model: str = "resnet",
         augmentation: bool = True,
+        optimizer: str = "adam",
         dataset: str = "cifar10",
         resume: bool = False,
         output_folder: str = "checkpoint",
@@ -143,10 +144,14 @@ def main(
         start_epoch = checkpoint['epoch']
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=lr,
-                          momentum=0.9, weight_decay=5e-4)
-    optimizer = optim.Adam(net.parameters(), lr=lr,)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    if optimizer == "sgd":
+        optimizer = optim.SGD(net.parameters(), lr=lr,
+                              momentum=0.9, weight_decay=5e-4)
+    elif optimizer == "adam":
+        optimizer = optim.Adam(net.parameters(), lr=lr,)
+    else:
+        raise ValueError(f"optimizer {optimizer} is not defined")
+    #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 
     # Training
@@ -227,7 +232,7 @@ def main(
         acc = teest(epoch)
         accs.append(acc)
         np.savetxt(output_folder / f"all.txt", accs)
-        scheduler.step()
+        #scheduler.step()
 
 
 if __name__ == '__main__':
