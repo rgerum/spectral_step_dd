@@ -54,6 +54,7 @@ def main(
         epochs: int = 4_000,
         run: int = 0,
 ):
+    print("timestamp main start", time.time())
     all_args = inspect.getcallargs(main, **locals())
     output_folder = Path(output_folder) / f"model-{model}_noise-{label_noise}_k-{k}_run-{run}"
     output_folder.mkdir(parents=True, exist_ok=True)
@@ -92,6 +93,8 @@ def main(
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 
+    print("timestamp get data", time.time())
+
     trainset = torchvision.datasets.CIFAR10(
         root='./data', train=True, download=True, transform=transform_train)
     trainset = add_label_noise(trainset, label_noise)
@@ -105,6 +108,8 @@ def main(
 
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
+
+    print("timestamp get model", time.time())
 
     # Model
     print('==> Building model..')
@@ -226,6 +231,7 @@ def main(
             torch.save(state, output_folder / f'ckpt_{epoch}.pth')
         return [acc, time.time(), epoch]
 
+    print("timestamp start train", time.time())
     accs = []
     for epoch in range(start_epoch, start_epoch+epochs):
         train(epoch)
@@ -236,4 +242,5 @@ def main(
 
 
 if __name__ == '__main__':
+    print("timestamp main", time.time())
     fire.Fire(main)
