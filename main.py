@@ -38,6 +38,7 @@ class Logger(object):
         # this flush method is needed for python 3 compatibility.
         # this handles the flush command by doing nothing.
         # you might want to specify some extra behavior here.
+        self.terminal.flush()
         pass
 
 
