@@ -24,6 +24,19 @@ def add_label_noise(trainset, label_noise):
     return trainset
 
 
+def restrict_classes(trainset, num_classes):
+    data = trainset.data
+    targets = np.array(trainset.targets)
+
+    indices = targets < num_classes
+    data = data[indices]
+    targets = targets[indices]
+
+    trainset.data = data
+    trainset.targets = list(targets)
+    return trainset
+
+
 def get_mean_and_std(dataset):
     '''Compute the mean and std value of dataset.'''
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)

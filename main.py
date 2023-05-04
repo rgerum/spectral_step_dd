@@ -21,7 +21,7 @@ from contextlib import redirect_stdout, redirect_stderr
 
 from models.resnet18k import make_resnet18k
 from models.mcnn import make_cnn
-from utils import progress_bar, add_label_noise
+from utils import progress_bar, add_label_noise, restrict_classes
 
 
 import sys
@@ -53,6 +53,7 @@ def main(
         resume: bool = False,
         output_folder: str = "checkpoint",
         epochs: int = 4_000,
+        num_classes: int = 10,
         run: int = 0,
 ):
     print("timestamp main start", time.time())
@@ -99,11 +100,13 @@ def main(
     trainset = torchvision.datasets.CIFAR10(
         root='./data', train=True, download=True, transform=transform_train)
     trainset = add_label_noise(trainset, label_noise)
+    trainset = restrict_classes(trainset, num_classes)
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=128, shuffle=True, num_workers=2)
 
     testset = torchvision.datasets.CIFAR10(
         root='./data', train=False, download=True, transform=transform_test)
+    testset = restrict_classes(testset, num_classes)
     testloader = torch.utils.data.DataLoader(
         testset, batch_size=100, shuffle=False, num_workers=2)
 
@@ -117,9 +120,9 @@ def main(
     # net = VGG('VGG19')
     #net = ResNet18()
     if model == "resnet":
-        net = make_resnet18k(k)
+        net = make_resnet18k(k, num_classes=num_classes)
     elif model == "cnn":
-        net = make_cnn(c=k)
+        net = make_cnn(c=k, num_classes=num_classes)
     else:
         raise
     # net = PreActResNet18()
