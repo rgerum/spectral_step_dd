@@ -25,7 +25,26 @@ import re
 labels_for_supercategory_cifar100 = [[4, 30, 55, 72, 95], [1, 32, 67, 73, 91], [54, 62, 70, 82, 92], [9, 10, 16, 28, 61], [0, 51, 53, 57, 83], [22, 39, 40, 86, 87], [5, 20, 25, 84, 94], [6, 7, 14, 18, 24], [3, 42, 43, 88, 97], [12, 17, 37, 68, 76]]
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-def get_dataset(dataset, transform_train=None, transform_test=None, label_noise=None):
+def get_dataset(dataset, label_noise=None, augmentation=False):
+    if augmentation:
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+    else:
+        transform_train = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+
     if transform_train == "default":
         transform_train = transforms.Compose([
             transforms.ToTensor(),
@@ -52,12 +71,15 @@ def get_dataset(dataset, transform_train=None, transform_test=None, label_noise=
                 print(":::::::", slice(start, end, step).indices(100))
             else:
                 values.append(int(s))
+    else:
+        name = dataset
+        values = None
 
     print("name", name, "values", values)
     classdef = None
-    if name == "CIFAR100":
+    if name.upper() == "CIFAR100":
         classdef = torchvision.datasets.CIFAR100
-    if name == "CIFAR10":
+    if name.upper() == "CIFAR10":
         classdef = torchvision.datasets.CIFAR10
 
     trainset = classdef(root='./data', train=True, download=True, transform=transform_train)
@@ -78,6 +100,8 @@ def get_dataset(dataset, transform_train=None, transform_test=None, label_noise=
     return trainset, trainloader, testset, testloader
 
 def restrict_classes_slice(trainset, values):
+    if values is None:
+        return trainset
     data = trainset.data
     targets = np.array(trainset.targets)
 

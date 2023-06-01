@@ -66,6 +66,9 @@ class PreActResNet(nn.Module):
         out = self.linear(out)
         return out
 
+    def get_last_layer(self):
+        return self.linear
+
 def make_resnet18k(k=64, num_classes=10) -> PreActResNet:
     ''' Returns a ResNet18 with width parameter k. (k=64 is standard ResNet18)'''
     return PreActResNet(PreActBlock, [2, 2, 2, 2], num_classes=num_classes, init_channels=k)
