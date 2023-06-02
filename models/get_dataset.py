@@ -106,7 +106,7 @@ def restrict_classes_slice(trainset, values):
     data = data[indices]
     targets = targets[indices]
 
-    targets2 = np.zeros(len(targets))
+    targets2 = np.zeros_like(targets)
     for index, value in enumerate(new_values):
         targets2[targets == value] = index
     #print(targets)
