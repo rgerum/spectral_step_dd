@@ -1,25 +1,10 @@
 import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-import torch.backends.cudnn as cudnn
 
 import torchvision
 import torchvision.transforms as transforms
 
 import numpy as np
-import os
-import argparse
-import fire
-import inspect
-from pathlib import Path
-import json
-import time
-from contextlib import redirect_stdout, redirect_stderr
-
-from models.resnet18k import make_resnet18k
-from models.mcnn import make_cnn
-from utils import progress_bar, add_label_noise, restrict_classes
+from utils import add_label_noise
 import re
 
 labels_for_supercategory_cifar100 = [[4, 30, 55, 72, 95], [1, 32, 67, 73, 91], [54, 62, 70, 82, 92], [9, 10, 16, 28, 61], [0, 51, 53, 57, 83], [22, 39, 40, 86, 87], [5, 20, 25, 84, 94], [6, 7, 14, 18, 24], [3, 42, 43, 88, 97], [12, 17, 37, 68, 76]]
@@ -68,14 +53,12 @@ def get_dataset(dataset, label_noise=None, augmentation=False):
                 if match.groups()[3]:
                     step = int(match.groups()[3])
                 values.append(slice(start, end, step))
-                print(":::::::", slice(start, end, step).indices(100))
             else:
                 values.append(int(s))
     else:
         name = dataset
         values = None
 
-    print("name", name, "values", values)
     classdef = None
     if name.upper() == "CIFAR100":
         classdef = torchvision.datasets.CIFAR100
@@ -107,28 +90,50 @@ def restrict_classes_slice(trainset, values):
 
     indices = targets*0
     max_classes = np.max(targets)+1
+
+    new_values = []
     for value in values:
         if isinstance(value, int):
             print("include", value)
             indices |= targets == value
+            new_values.append(value)
         else:
             for i in range(*value.indices(max_classes)):
-                print("include slice", i, value.indices(max_classes))
                 indices |= targets == i
-    print(np.sum(indices))
+                new_values.append(i)
+
+    indices = indices.astype(bool)
     data = data[indices]
     targets = targets[indices]
+
+    targets2 = np.zeros(len(targets))
+    for index, value in enumerate(new_values):
+        targets2[targets == value] = index
     #print(targets)
 
     trainset.data = data
-    trainset.targets = list(targets)
+    trainset.targets = list(targets2)
     return trainset
 
-if 1:
-    print(get_dataset("CIFAR100[0:10]", label_noise=20))
-    print(get_dataset("CIFAR100[:10]"))
-    print(get_dataset("CIFAR100[::2]"))
-    print(get_dataset("CIFAR100[0,3,8:10]"))
+if 0:
+    #print(get_dataset("CIFAR100[0:10]", label_noise=20))
+    #print(get_dataset("CIFAR100[:10]"))
+    #print(get_dataset("CIFAR100[::2]"))
+    #print(get_dataset("CIFAR100[0,3,8:10]"))
+    trainset, trainloader, testset, testloader = get_dataset("cifar100[4, 30, 55, 72, 95, 1, 32, 67, 73, 91]")
+    print(trainset)
+    print(np.unique(trainset.targets), np.max(trainset.targets))
+    for batch_x, batch_y in trainloader:
+        print(batch_x.shape)
+        import matplotlib.pyplot as plt
+        for i in range(9):
+            plt.subplot(3, 3, i+1)
+            plt.imshow(batch_x[i].numpy().transpose(1, 2, 0))
+            plt.title(batch_y[i].numpy())
+        print(batch_y.shape)
+        plt.show()
+        continue
+        exit()
 
 def get_cifar100_supercategory():
     from cifarDataset import CIFAR100
