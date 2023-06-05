@@ -1,5 +1,6 @@
 ## Based on: https://github.com/kuangliu/pytorch-cifar
 '''Train CIFAR10 with PyTorch.'''
+import pandas as pd
 import torch
 
 import numpy as np
@@ -52,13 +53,13 @@ def main(
     train, test = get_train(net, trainloader, testloader, device, optimizer, criterion, output_folder)
 
     print("timestamp start train", time.time())
-    accs = []
+    epoch_data = []
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     for epoch in range(start_epoch, start_epoch+epochs):
         train(epoch)
-        acc = test(epoch)
-        accs.append(acc)
-        np.savetxt(Path(output_folder) / f"all.txt", accs)
+        data = test(epoch)
+        epoch_data.append(data)
+        pd.DataFrame(epoch_data).to_csv(Path(output_folder) / f"all.csv")
 
 
 if __name__ == '__main__':
