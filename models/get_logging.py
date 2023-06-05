@@ -50,3 +50,5 @@ def get_logging(all_args):
     with open(output_folder / "params.json", "w") as fp:
         json.dump(all_args, fp, indent=2)
     print(all_args)
+
+    return output_folder

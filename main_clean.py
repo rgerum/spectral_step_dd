@@ -33,7 +33,7 @@ def main(
 ):
     print("timestamp main start", time.time())
     all_args = inspect.getcallargs(main, **locals())
-    get_logging(all_args)
+    output_folder = get_logging(all_args)
 
     torch.manual_seed(1234 + run)
     np.random.seed(run)
