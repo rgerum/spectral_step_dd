@@ -6,11 +6,11 @@ import torchvision.transforms as transforms
 import numpy as np
 from utils import add_label_noise
 import re
-
-labels_for_supercategory_cifar100 = [[4, 30, 55, 72, 95], [1, 32, 67, 73, 91], [54, 62, 70, 82, 92], [9, 10, 16, 28, 61], [0, 51, 53, 57, 83], [22, 39, 40, 86, 87], [5, 20, 25, 84, 94], [6, 7, 14, 18, 24], [3, 42, 43, 88, 97], [12, 17, 37, 68, 76]]
+#                                                                                                                                                                                                              large carnivores
+labels_for_supercategory_cifar100 = [[4, 30, 55, 72, 95], [1, 32, 67, 73, 91], [54, 62, 70, 82, 92], [9, 10, 16, 28, 61], [0, 51, 53, 57, 83], [22, 39, 40, 86, 87], [5, 20, 25, 84, 94], [6, 7, 14, 18, 24], [3, 42, 43, 88, 97], [12, 17, 37, 68, 76], [23, 33, 49, 60, 71], [15, 19, 21, 31, 38], [34, 63, 64, 66, 75], [26, 45, 77, 79, 99], [2, 11, 35, 46, 98], [27, 29, 44, 78, 93], [36, 50, 65, 74, 80], [47, 52, 56, 59, 96], [8, 13, 48, 58, 90], [41, 69, 81, 85, 89]]
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-def get_dataset(dataset, label_noise=None, augmentation=False):
+def get_dataset(dataset, label_noise=None, augmentation=False, batch_size_train=128, batch_size_test=100):
     if augmentation:
         transform_train = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
@@ -71,14 +71,14 @@ def get_dataset(dataset, label_noise=None, augmentation=False):
 
     trainset = restrict_classes_slice(trainset, values)
     trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=128, shuffle=True, num_workers=2)
+        trainset, batch_size=batch_size_train, shuffle=True, num_workers=2)
 
 
     testset = classdef(
         root='./data', train=False, download=True, transform=transform_test)
     testset = restrict_classes_slice(testset, values)
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=100, shuffle=False, num_workers=2)
+        testset, batch_size=batch_size_test, shuffle=False, num_workers=2)
 
     return trainset, trainloader, testset, testloader
 
@@ -94,7 +94,6 @@ def restrict_classes_slice(trainset, values):
     new_values = []
     for value in values:
         if isinstance(value, int):
-            print("include", value)
             indices |= targets == value
             new_values.append(value)
         else:
@@ -121,19 +120,25 @@ if 0:
     #print(get_dataset("CIFAR100[::2]"))
     #print(get_dataset("CIFAR100[0,3,8:10]"))
     trainset, trainloader, testset, testloader = get_dataset("cifar100[4, 30, 55, 72, 95, 1, 32, 67, 73, 91]")
-    print(trainset)
-    print(np.unique(trainset.targets), np.max(trainset.targets))
-    for batch_x, batch_y in trainloader:
-        print(batch_x.shape)
-        import matplotlib.pyplot as plt
-        for i in range(9):
-            plt.subplot(3, 3, i+1)
-            plt.imshow(batch_x[i].numpy().transpose(1, 2, 0))
-            plt.title(batch_y[i].numpy())
-        print(batch_y.shape)
-        plt.show()
-        continue
-        exit()
+    trainset, trainloader, testset, testloader = get_dataset("cifar100[12, 17, 37, 68, 76]")
+
+    for id, group in enumerate(labels_for_supercategory_cifar100):
+        group = ",".join([str(i) for i in group])
+        trainset, trainloader, testset, testloader = get_dataset(f"cifar100[{group}]")
+        print(trainset)
+        print(np.unique(trainset.targets), np.max(trainset.targets))
+        for batch_x, batch_y in trainloader:
+            print(batch_x.shape)
+            import matplotlib.pyplot as plt
+            for i in range(9):
+                plt.subplot(3, 3, i+1)
+                plt.imshow(batch_x[i].numpy().transpose(1, 2, 0))
+                plt.title(batch_y[i].numpy())
+            print(batch_y.shape)
+            plt.savefig(f"group_{id}_{group}.png")
+            plt.clf()
+            break
+    exit()
 
 def get_cifar100_supercategory():
     from cifarDataset import CIFAR100
@@ -154,7 +159,7 @@ def get_cifar100_supercategory():
     print(fine_labels)
 
     fine_labels_in_coarse = []
-    for i in range(10):
+    for i in range(20):
         train_coarse_labels = np.array(train_data.train_coarse_labels)
         train_labels = np.array(train_data.train_labels)
         print(train_coarse_labels == i)
@@ -165,3 +170,5 @@ def get_cifar100_supercategory():
     print(fine_labels_in_coarse)
     print(len([x for xx in fine_labels_in_coarse for x in xx]))
     print(len(np.unique([x for xx in fine_labels_in_coarse for x in xx])))
+
+#get_cifar100_supercategory()
