@@ -41,7 +41,7 @@ def get_logging(all_args):
     k = all_args["k"]
     run = all_args["run"]
 
-    output_folder = Path(output_folder) / f"modelx-{model}_noise-{label_noise}_k-{k}_run-{run}"
+    output_folder = Path(output_folder) / f"model-{model}_noise-{label_noise}_k-{k}_run-{run}"
     output_folder.mkdir(parents=True, exist_ok=True)
 
     sys.stdout = Logger(output_folder / "log.txt")
