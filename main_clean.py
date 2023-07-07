@@ -1,5 +1,16 @@
 ## Based on: https://github.com/kuangliu/pytorch-cifar
 '''Train CIFAR10 with PyTorch.'''
+import numpy as np
+import pandas as pd
+from sklearn.decomposition import PCA
+import json
+
+# need to first call it once before importing torch
+X = np.random.rand(300, 160).astype(np.float32)
+pca = PCA(n_components=2)
+pca.fit(X)
+
+
 import pandas as pd
 import torch
 
@@ -31,6 +42,8 @@ def main(
         num_classes: int = 10,
         run: int = 0,
         checkpoint_file: str = None,
+        train_layers: str = "all",
+        subspace_to_train=None,
 ):
     print("timestamp main start", time.time())
     all_args = inspect.getcallargs(main, **locals())
@@ -46,9 +59,10 @@ def main(
 
     # Model
     print('==> Building model..')
-    net, trainable_params = get_model(model, k, num_classes, device, checkpoint_file)
+    net, trainable_params = get_model(model, k, num_classes, device, checkpoint_file, train_layers, subspace_to_train)
     criterion, optimizer = get_loss(trainable_params, optimizer, lr)
 
+    print(net)
     # Training
     train, test = get_train(net, trainloader, testloader, device, optimizer, criterion, output_folder)
 

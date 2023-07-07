@@ -1,7 +1,7 @@
 ## Based on: https://gitlab.com/harvard-machine-learning/double-descent/-/blob/master/models/resnet18k.py
 ## ResNet18 for CIFAR
 ## Based on: https://github.com/kuangliu/pytorch-cifar/blob/master/models/preact_resnet.py
-
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -55,6 +55,15 @@ class PreActResNet(nn.Module):
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
+    down_project = False
+    def project(self, mean, components, device):
+        self.down_project = True
+        self.mean = torch.tensor(mean).to(device)
+        self.components = torch.tensor(components.T).to(device)
+        self.linear = nn.Linear(components.shape[0], self.linear.out_features)
+        print("proj", self.components.shape)
+        print(self.linear)
+
     def forward(self, x):
         out = self.conv1(x)
         out = self.layer1(out)
@@ -63,6 +72,9 @@ class PreActResNet(nn.Module):
         out = self.layer4(out)
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
+        if self.down_project is True:
+            out = out - self.mean
+            out = out @ self.components
         out = self.linear(out)
         return out
 
